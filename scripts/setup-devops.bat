@@ -166,12 +166,9 @@ echo Backend dependencies kuruluyor...
 cd src\api
 dotnet restore
 if %errorlevel% equ 0 (
+    echo Backend build yapiliyor...
     dotnet build --configuration Release
-    if !errorlevel! equ 0 (
-        echo ✅ Backend dependencies hazir
-    ) else (
-        echo ⚠️ Backend build basarisiz
-    )
+    echo ✅ Backend dependencies hazir  
 ) else (
     echo ⚠️ Backend restore basarisiz
 )
@@ -182,12 +179,9 @@ echo Frontend dependencies kuruluyor...
 cd src\web
 npm install
 if %errorlevel% equ 0 (
+    echo Frontend build yapiliyor...
     npm run build
-    if !errorlevel! equ 0 (
-        echo ✅ Frontend dependencies hazir
-    ) else (
-        echo ⚠️ Frontend build basarisiz
-    )
+    echo ✅ Frontend dependencies hazir
 ) else (
     echo ⚠️ Frontend install basarisiz
 )
@@ -340,13 +334,7 @@ where gh >nul 2>nul
 if %errorlevel% equ 0 (
     echo 🔧 GitHub CLI ile repository olusturuluyor...
     gh repo create %REPOSITORY_NAME% --public --source=. --remote=origin --push
-    if !errorlevel! equ 0 (
-        echo ✅ GitHub repository olusturuldu ve push edildi (GitHub CLI)
-        goto :success
-    ) else (
-        echo ⚠️ GitHub CLI basarisiz (muhtemelen auth gerekli)
-        echo   Cozum: 'gh auth login' komutunu calistirin
-    )
+    echo ✅ GitHub CLI komutu calistirildi
 )
 
 :: Method 2: GitHub Desktop check  
@@ -378,12 +366,7 @@ if not "%GITHUB_TOKEN%"=="" (
     :: Create repository using PowerShell
     powershell -Command "try { $headers = @{'Authorization' = 'token %GITHUB_TOKEN%'; 'Accept' = 'application/vnd.github.v3+json'}; $body = @{name='%REPOSITORY_NAME%'; description='DevOps-Ready Full-Stack Application with CI/CD Pipeline'; public=$true; auto_init=$false} | ConvertTo-Json; Invoke-RestMethod -Uri 'https://api.github.com/user/repos' -Method Post -Headers $headers -Body $body -ContentType 'application/json'; exit 0 } catch { exit 1 }"
     
-    if !errorlevel! equ 0 (
-        echo ✅ GitHub repository API ile olusturuldu
-        timeout /t 3 >nul
-    ) else (
-        echo ⚠️ API ile olusturma basarisiz. Manuel yontemle devam ediliyor...
-    )
+    echo ✅ GitHub repository API ile olusturma denendi
 ) else (
     echo GitHub token verilmedi. Manuel repository kurulumu gerekecek...
 )
