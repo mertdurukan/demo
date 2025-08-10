@@ -98,7 +98,7 @@ where docker >nul 2>nul && (
 :: ================================
 :: STEP 8: GITHUB REPOSITORY
 :: ================================
-echo [8/8] GitHub repository setup...
+echo [8/9] GitHub repository setup...
 
 set REPOSITORY_URL=https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%.git
 
@@ -137,6 +137,71 @@ git push -u origin main >nul 2>nul && (
 )
 
 :: ================================
+:: STEP 9: GITHUB SECRETS SETUP
+:: ================================
+echo.
+echo [9/9] GitHub Secrets setup...
+
+:: GitHub CLI ile secrets ekleme
+where gh >nul 2>nul && (
+    echo.
+    echo 🔒 OTOMATIK SECRETS SETUP:
+    set /p "AUTO_SECRETS=GitHub secrets'lari otomatik eklemek istiyor musunuz? (y/N): "
+    if /i "!AUTO_SECRETS!"=="y" (
+        echo.
+        echo 🔑 Database şifreleri belirleniyor...
+        set /p "STAGING_PASS=STAGING_DB_PASSWORD girin (veya Enter = otomatik): "
+        set /p "PRODUCTION_PASS=PRODUCTION_DB_PASSWORD girin (veya Enter = otomatik): "
+        
+        if "!STAGING_PASS!"=="" set STAGING_PASS=DevStaging#2024$Secure!Pass123
+        if "!PRODUCTION_PASS!"=="" set PRODUCTION_PASS=ProdLive#2024$Ultra&Secure!Pass456
+        
+        echo GitHub secrets ekleniyor...
+        gh secret set STAGING_DB_PASSWORD --body "!STAGING_PASS!" --repo %GITHUB_USERNAME%/%REPOSITORY_NAME%
+        gh secret set PRODUCTION_DB_PASSWORD --body "!PRODUCTION_PASS!" --repo %GITHUB_USERNAME%/%REPOSITORY_NAME%
+        
+        echo ✅ GitHub secrets otomatik eklendi!
+        echo   - STAGING_DB_PASSWORD: !STAGING_PASS!
+        echo   - PRODUCTION_DB_PASSWORD: !PRODUCTION_PASS!
+    ) else (
+        echo Manuel secrets kurulumu gerekecek...
+    )
+) || (
+    echo GitHub CLI bulunamadi. Manuel secrets kurulumu gerekecek...
+)
+
+:: Browser ile otomatik secrets sayfası açma (fallback)
+if not defined AUTO_SECRETS (
+    echo.
+    echo 🌐 BROWSER ile secrets ekleme:
+    set /p "BROWSER_SECRETS=Secrets sayfasini tarayicide acmak istiyor musunuz? (y/N): "
+    if /i "!BROWSER_SECRETS!"=="y" (
+        powershell -command "Start-Process 'https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%/settings/secrets/actions/new'"
+        echo.
+        echo 📋 TARAYICIDA YAPILACAKLAR:
+        echo 1. "New repository secret" sayfasi acildi
+        echo 2. Ilk secret:
+        echo    Name: STAGING_DB_PASSWORD
+        echo    Value: DevStaging#2024$Secure!Pass123
+        echo 3. "Add secret" tiklayin
+        echo 4. Ikinci secret icin "New repository secret" tekrar tiklayin:
+        echo    Name: PRODUCTION_DB_PASSWORD  
+        echo    Value: ProdLive#2024$Ultra&Secure!Pass456
+        echo 5. Bu pencereye donun ve ENTER basin
+        set /p "BROWSER_DONE=Secrets eklendikten sonra ENTER basin: "
+        echo ✅ Browser ile secrets eklendi kabul edildi
+    )
+)
+
+:: Manuel talimatlar
+echo.
+echo 📋 MANUEL SECRETS KURULUMU (gerekirse):
+echo 1. GitHub: https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%/settings/secrets/actions
+echo 2. "New repository secret" tiklayin
+echo 3. STAGING_DB_PASSWORD = DevStaging#2024$Secure!Pass123
+echo 4. PRODUCTION_DB_PASSWORD = ProdLive#2024$Ultra&Secure!Pass456
+
+:: ================================
 :: SUCCESS MESSAGE
 :: ================================
 :success
@@ -150,10 +215,10 @@ echo.
 echo 📋 SONRAKI ADIMLAR:
 echo 1. GitHub: https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%
 echo 2. Actions tab'inda pipeline'lari kontrol edin
-echo 3. Settings'te secrets ekleyin:
-echo    - STAGING_DB_PASSWORD
-echo    - PRODUCTION_DB_PASSWORD  
-echo 4. Local test: docker-compose up -d
+echo 3. Secrets otomatik eklendiyse direkt test:
+echo    docker-compose up -d
+echo    http://localhost:5202 (Web)
+echo    http://localhost:5102 (API)
 echo.
 echo 🎯 TANIMLILAR:
 echo ✅ CI/CD Pipeline (GitHub Actions)
