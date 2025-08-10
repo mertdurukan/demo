@@ -53,8 +53,10 @@ echo ✅ Git setup tamamlandi
 :: ================================
 echo [3/8] Backend build...
 cd src\api
-dotnet restore >nul
-dotnet build --configuration Release >nul
+echo   - dotnet restore yapiliyor...
+dotnet restore >nul 2>nul
+echo   - dotnet build yapiliyor...
+dotnet build --configuration Release >nul 2>nul
 cd ..\..
 echo ✅ Backend build tamamlandi
 
@@ -63,8 +65,10 @@ echo ✅ Backend build tamamlandi
 :: ================================
 echo [4/8] Frontend build...
 cd src\web
-npm install >nul
-npm run build >nul
+echo   - npm install yapiliyor...
+npm install >nul 2>nul
+echo   - npm build yapiliyor...
+npm run build >nul 2>nul
 cd ..\..
 echo ✅ Frontend build tamamlandi
 
