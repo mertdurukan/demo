@@ -26,20 +26,18 @@ Bu rehber, tüm DevOps kurulumunu **tek komutla** yapmanızı sağlar. Hiçbir m
 
 ## 🖥️ Kullanım
 
-### Windows (PowerShell)
+### Windows (Batch)
 
-```powershell
+```batch
 # Basit kullanım (varsayılan repository adı ile)
-.\scripts\setup-devops.ps1 -GitHubUsername "your-github-username"
+.\scripts\setup-devops.bat your-github-username
 
 # Özel repository adı ile
-.\scripts\setup-devops.ps1 -GitHubUsername "your-github-username" -RepositoryName "my-awesome-app"
+.\scripts\setup-devops.bat your-github-username my-awesome-app
 
-# GitHub Token ile (otomatik repo oluşturma için)
-.\scripts\setup-devops.ps1 -GitHubUsername "your-github-username" -GitHubToken "ghp_xxxxxxxxxxxx"
-
-# GitHub repo oluşturmayı atlayarak
-.\scripts\setup-devops.ps1 -GitHubUsername "your-github-username" -SkipGitHubRepo
+# Örnek kullanım
+.\scripts\setup-devops.bat mertdurukan
+.\scripts\setup-devops.bat mertdurukan devops-fullstack-app
 ```
 
 ### Linux/macOS (Bash)
@@ -64,7 +62,7 @@ chmod +x scripts/setup-devops.sh
 
 ```bash
 # Windows
-.\scripts\setup-devops.ps1 -GitHubUsername "johnsmith"
+.\scripts\setup-devops.bat johnsmith
 
 # Linux/macOS  
 ./scripts/setup-devops.sh johnsmith

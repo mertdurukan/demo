@@ -3,7 +3,8 @@
 # AUTOMATED DEVOPS SETUP SCRIPT (Linux/macOS)
 # ================================
 # Bu script tüm DevOps setup'ını otomatik yapar
-# Çalıştırmak için: ./scripts/setup-devops.sh your-github-username
+#
+# Calistirmak icin: .\scripts\setup-devops.bat mertdurukan
 #
 # 🚀 SCRIPT YAPACAKLARI:
 # ✅ Git, .NET, Node.js kurulumu (yoksa)
