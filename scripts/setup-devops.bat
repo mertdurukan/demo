@@ -335,17 +335,81 @@ echo ================================
 
 set REPOSITORY_URL=https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%.git
 
-:: GitHub CLI check
+:: Method 1: GitHub CLI check
 where gh >nul 2>nul
 if %errorlevel% equ 0 (
-    echo GitHub CLI ile repository olusturuluyor...
+    echo 🔧 GitHub CLI ile repository olusturuluyor...
     gh repo create %REPOSITORY_NAME% --public --source=. --remote=origin --push
     if !errorlevel! equ 0 (
-        echo ✅ GitHub repository olusturuldu ve push edildi
+        echo ✅ GitHub repository olusturuldu ve push edildi (GitHub CLI)
         goto :success
     ) else (
-        echo GitHub CLI ile olusturma basarisiz. Manuel yontemle devam ediliyor...
+        echo ⚠️ GitHub CLI basarisiz (muhtemelen auth gerekli)
+        echo   Cozum: 'gh auth login' komutunu calistirin
     )
+)
+
+:: Method 2: GitHub Desktop check  
+echo.
+echo 🔧 GitHub Desktop kontrol ediliyor...
+where github >nul 2>nul
+if %errorlevel% equ 0 (
+    echo GitHub Desktop bulundu, otomatik repository olusturma deneniyor...
+    start "" "github://github.com/new?name=%REPOSITORY_NAME%"
+    timeout /t 2 >nul
+    echo ✅ GitHub Desktop acildi, repository olusturun ve bu pencereye donun
+    set /p "DESKTOP_CREATED=GitHub Desktop'ta repository olusturulduktan sonra ENTER basin: "
+    echo ✅ Repository olusturuldu kabul edildi
+) else (
+    echo GitHub Desktop bulunamadi
+)
+
+:: PowerShell + GitHub API ile otomatik oluşturma
+echo.
+echo GitHub repository otomatik olusturuluyor (GitHub'a giriş gerekli)...
+echo.
+echo ⚠️ GitHub kullanici adi ve token gerekli!
+echo.
+set /p "GITHUB_TOKEN=GitHub Personal Access Token girin (veya Enter = atla): "
+
+if not "%GITHUB_TOKEN%"=="" (
+    echo GitHub API ile repository olusturuluyor...
+    
+    :: Create repository using PowerShell
+    powershell -Command "try { $headers = @{'Authorization' = 'token %GITHUB_TOKEN%'; 'Accept' = 'application/vnd.github.v3+json'}; $body = @{name='%REPOSITORY_NAME%'; description='DevOps-Ready Full-Stack Application with CI/CD Pipeline'; public=$true; auto_init=$false} | ConvertTo-Json; Invoke-RestMethod -Uri 'https://api.github.com/user/repos' -Method Post -Headers $headers -Body $body -ContentType 'application/json'; exit 0 } catch { exit 1 }"
+    
+    if !errorlevel! equ 0 (
+        echo ✅ GitHub repository API ile olusturuldu
+        timeout /t 3 >nul
+    ) else (
+        echo ⚠️ API ile olusturma basarisiz. Manuel yontemle devam ediliyor...
+    )
+) else (
+    echo GitHub token verilmedi. Manuel repository kurulumu gerekecek...
+)
+
+:: Fallback: Otomatik browser açma
+echo.
+echo 🌐 OTOMATIK BROWSER KURULUMU:
+echo.
+set /p "AUTO_BROWSER=GitHub'i tarayicide otomatik acmak istiyor musunuz? (y/N): "
+if /i "%AUTO_BROWSER%"=="y" (
+    echo GitHub new repository sayfasi aciliyor...
+    start "" "https://github.com/new?name=%REPOSITORY_NAME%&description=DevOps-Ready+Full-Stack+Application+with+CI/CD+Pipeline&visibility=public"
+    echo.
+    echo 📋 OTOMATIK KURULUM TALIMATLARI:
+    echo 1. Tarayicida acilan sayfada:
+    echo    - Repository name: %REPOSITORY_NAME% (dolu gelecek)
+    echo    - Description: DevOps-Ready Full-Stack... (dolu gelecek)  
+    echo    - Public secili olacak
+    echo    - README, .gitignore, license EKLEMEYIN!
+    echo 2. "Create repository" butonuna tiklayin
+    echo 3. Bu pencereye donun ve ENTER'a basin
+    echo.
+    set /p "REPO_CREATED=Repository olusturulduktan sonra ENTER basin: "
+    echo ✅ Repository olusturuldu kabul edildi
+) else (
+    echo Manuel kurulum gerekecek...
 )
 
 :: Remove existing origin if any
