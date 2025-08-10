@@ -65,7 +65,7 @@ echo ✅ Backend build tamamlandi
 :: ================================
 echo [4/8] Frontend build...
 cd src\web
-echo   - npm install yapiliyor...
+echo   - npm install yapiliyor (30-60 saniye surebilir)...
 npm install >nul 2>nul
 echo   - npm build yapiliyor...
 npm run build >nul 2>nul
@@ -116,7 +116,7 @@ echo.
 echo 🌐 OTOMATIK GITHUB SETUP:
 set /p "AUTO_SETUP=GitHub'i tarayicide acmak istiyor musunuz? (y/N): "
 if /i "%AUTO_SETUP%"=="y" (
-    start "" "https://github.com/new?name=%REPOSITORY_NAME%&description=DevOps+Ready+Application&visibility=public"
+    powershell -command "Start-Process 'https://github.com/new?name=%REPOSITORY_NAME%&description=DevOps+Ready+Application&visibility=public'"
     echo.
     echo 📋 INSTRUCTIONS:
     echo 1. Tarayicida repository olusturun
