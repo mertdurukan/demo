@@ -142,18 +142,7 @@ if not exist ".gitignore" (
 :: Initial commit
 git add .
 
-git commit -m "feat: initial DevOps setup with CI/CD pipeline
-
-- ✅ Modern repository structure (src/api, src/web)
-- ✅ Docker containerization (multi-stage builds)
-- ✅ CI/CD pipelines (GitHub Actions)
-- ✅ Security scanning (Trivy, CodeQL)
-- ✅ Health checks and monitoring
-- ✅ Infrastructure as Code ready
-- ✅ Professional documentation
-
-This commit establishes a production-ready DevOps foundation
-following industry best practices."
+git commit -m "feat: initial DevOps setup with CI/CD pipeline - Modern repository structure (src/api, src/web) - Docker containerization (multi-stage builds) - CI/CD pipelines (GitHub Actions) - Security scanning (Trivy, CodeQL) - Health checks and monitoring - Infrastructure as Code ready - Professional documentation - This commit establishes a production-ready DevOps foundation following industry best practices."
 
 echo ✅ Ilk commit olusturuldu
 
