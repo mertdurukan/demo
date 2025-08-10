@@ -237,24 +237,6 @@ npm run test:integration
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team
-
-- **DevOps Engineer:** Pipeline & Infrastructure
-- **Backend Developer:** .NET Core API
-- **Frontend Developer:** Next.js UI
-- **QA Engineer:** Testing & Quality
-
-## 📞 Support
-
-- 📧 **Email:** support@yourapp.com
-- 💬 **Slack:** #devops-support
-- 🐛 **Issues:** [GitHub Issues](../../issues)
-- 📖 **Wiki:** [Project Wiki](../../wiki)
-
 ---
 
 **🎯 Built with DevOps Excellence in Mind**
