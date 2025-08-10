@@ -102,39 +102,131 @@ echo [8/9] GitHub repository setup...
 
 set REPOSITORY_URL=https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%.git
 
-:: GitHub CLI dene
+:: YÖNTEM 1: GitHub CLI dene
 where gh >nul 2>nul && (
     echo GitHub CLI ile deneniyor...
     gh repo create %REPOSITORY_NAME% --public --source=. --remote=origin --push >nul 2>nul && (
         echo ✅ GitHub CLI ile basarili!
-        goto :success
+        goto :push_success
     )
 )
 
-:: Manuel browser yontemi
+:: YÖNTEM 2: PowerShell + GitHub API
 echo.
-echo 🌐 OTOMATIK GITHUB SETUP:
+echo 🔑 GITHUB TOKEN KONTROLU:
+:: Otomatik token arama
+set "GITHUB_TOKEN="
+if exist "%USERPROFILE%\.config\gh\hosts.yml" (
+    echo GitHub CLI config bulundu, token çıkarılıyor...
+    for /f "tokens=*" %%i in ('powershell -command "try { (Get-Content '%USERPROFILE%\.config\gh\hosts.yml' | Select-String 'oauth_token:' | ForEach-Object { $_.ToString().Split(':')[1].Trim() } | Select-Object -First 1) } catch { '' }"') do set "GITHUB_TOKEN=%%i"
+)
+
+if defined GITHUB_TOKEN (
+    echo ✅ GitHub token bulundu! API ile otomatik oluşturuluyor...
+    goto :api_create
+)
+
+if not defined GITHUB_TOKEN (
+    echo.
+    echo 🔑 POWERSHELL API ile repository olusturma:
+    set /p "USE_API=GitHub Personal Access Token var mi? (y/N): "
+    if /i "%USE_API%"=="y" (
+        set /p "GITHUB_TOKEN=GitHub Token girin: "
+    )
+)
+
+:api_create
+if not "!GITHUB_TOKEN!"=="" (
+        echo API ile repository olusturuluyor...
+        powershell -command "try { $headers = @{'Authorization' = 'token !GITHUB_TOKEN!'; 'Accept' = 'application/vnd.github.v3+json'}; $body = @{name='%REPOSITORY_NAME%'; description='DevOps Ready Application'; 'private'=$false} | ConvertTo-Json; Invoke-RestMethod -Uri 'https://api.github.com/user/repos' -Method Post -Headers $headers -Body $body -ContentType 'application/json'; echo 'API SUCCESS' } catch { echo 'API FAILED' }" >temp_api_result.txt
+        findstr "API SUCCESS" temp_api_result.txt >nul && (
+            del temp_api_result.txt
+            echo ✅ PowerShell API ile basarili!
+            goto :git_push
+        )
+        del temp_api_result.txt >nul 2>nul
+        echo ⚠️ API ile oluşturulamadi
+    )
+)
+
+:: YÖNTEM 3: curl + GitHub API (PowerShell fallback)
+where curl >nul 2>nul && (
+    if not defined GITHUB_TOKEN (
+        echo.
+        echo 🌐 CURL API ile repository olusturma:
+        set /p "USE_CURL=GitHub Token ile curl denemek istiyor musunuz? (y/N): "
+        if /i "!USE_CURL!"=="y" (
+            set /p "GITHUB_TOKEN=GitHub Token girin: "
+        )
+    )
+    if not "!GITHUB_TOKEN!"=="" (
+        echo curl ile repository olusturuluyor...
+        curl -H "Authorization: token !GITHUB_TOKEN!" -H "Accept: application/vnd.github.v3+json" -X POST https://api.github.com/user/repos -d "{\"name\":\"%REPOSITORY_NAME%\",\"description\":\"DevOps Ready Application\",\"private\":false}" >temp_curl_result.txt 2>nul
+        findstr "\"name\":\"%REPOSITORY_NAME%\"" temp_curl_result.txt >nul && (
+            del temp_curl_result.txt
+            echo ✅ curl API ile basarili!
+            goto :git_push
+        )
+        del temp_curl_result.txt >nul 2>nul
+        echo ⚠️ curl ile oluşturulamadi
+    )
+)
+
+:: YÖNTEM 4: Browser + Manuel
+echo.
+echo 🌐 BROWSER ile manuel olusturma:
 set /p "AUTO_SETUP=GitHub'i tarayicide acmak istiyor musunuz? (y/N): "
 if /i "%AUTO_SETUP%"=="y" (
     powershell -command "Start-Process 'https://github.com/new?name=%REPOSITORY_NAME%&description=DevOps+Ready+Application&visibility=public'"
     echo.
-    echo 📋 INSTRUCTIONS:
-    echo 1. Tarayicida repository olusturun
-    echo 2. "Create repository" tiklayin  
-    echo 3. Bu pencereye donun ve ENTER basin
+    echo 📋 TARAYICI TALIMATLARI:
+    echo 1. GitHub tarayicida acildi
+    echo 2. Repository name: %REPOSITORY_NAME%
+    echo 3. Description: DevOps Ready Application
+    echo 4. Public secin
+    echo 5. "Create repository" tiklayin  
+    echo 6. Bu pencereye donun ve ENTER basin
     set /p "WAIT=Repository olusturulduktan sonra ENTER basin: "
+    goto :git_push
 )
 
-:: Git remote ekle ve push yap
+:: YÖNTEM 5: Manuel Talimatlar (son çare)
+echo.
+echo 📋 MANUEL REPOSITORY OLUSTURMA:
+echo 1. https://github.com/new adresine gidin
+echo 2. Repository name: %REPOSITORY_NAME%
+echo 3. Description: DevOps Ready Application
+echo 4. Public secin ve "Create repository" tiklayin
+echo 5. Oluşturduktan sonra bu pencereye donun
+set /p "MANUAL_DONE=Manuel olarak oluşturdunuz mu? (y/N): "
+
+:git_push
+:: Git remote ve push işlemi
+echo.
+echo 📤 GitHub'a push yapiliyor...
 git remote remove origin >nul 2>nul
 git remote add origin %REPOSITORY_URL%
 git push -u origin main >nul 2>nul && (
     echo ✅ GitHub'a push basarili!
+    goto :push_success
 ) || (
-    echo ⚠️ Push basarisiz - repository manuel olusturun:
-    echo   https://github.com/new
-    echo   Repository name: %REPOSITORY_NAME%
+    echo ⚠️ Push basarisiz. Repository doğru oluşturuldu mu?
+    echo Kontrol edin: https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%
+    echo.
+    set /p "RETRY_PUSH=Tekrar push denemek istiyor musunuz? (y/N): "
+    if /i "!RETRY_PUSH!"=="y" (
+        git push -u origin main && (
+            echo ✅ İkinci denemede basarili!
+            goto :push_success
+        ) || (
+            echo ❌ Push yine basarisiz oldu
+            echo Manuel kontrol gerekli: https://github.com/%GITHUB_USERNAME%/%REPOSITORY_NAME%
+        )
+    )
 )
+
+:push_success
+echo ✅ Repository başarıyla oluşturuldu ve push edildi!
 
 :: ================================
 :: STEP 9: GITHUB SECRETS SETUP
