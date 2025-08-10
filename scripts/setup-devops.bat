@@ -211,8 +211,74 @@ if not exist ".env" (
 )
 
 :: ================================
+:: GITHUB ACTIONS SETUP
+:: ================================
+echo.
+echo ================================
+echo GITHUB ACTIONS SETUP
+echo ================================
+
+:: Check if GitHub Actions directory exists
+if not exist ".github\workflows" (
+    mkdir ".github\workflows"
+    echo ✅ GitHub Actions klasoru olusturuldu
+)
+
+:: Check if CI workflow exists and is not empty
+if not exist ".github\workflows\ci.yml" (
+    echo ⚠️ CI workflow dosyasi bulunamadi, temel workflow olusturuluyor...
+    goto :create_basic_ci
+)
+
+for %%I in (.github\workflows\ci.yml) do if %%~zI LSS 100 (
+    echo ⚠️ CI workflow dosyasi bos, duzeltiliyor...
+    goto :create_basic_ci
+)
+
+echo ✅ GitHub Actions workflows hazir
+goto :docker_setup
+
+:create_basic_ci
+echo Creating basic CI workflow...
+(
+echo name: 🔄 Continuous Integration
+echo.
+echo on:
+echo   push:
+echo     branches: [ main ]
+echo   pull_request:
+echo     branches: [ main ]
+echo.
+echo jobs:
+echo   build:
+echo     runs-on: ubuntu-latest
+echo     steps:
+echo     - uses: actions/checkout@v4
+echo     - name: Setup .NET
+echo       uses: actions/setup-dotnet@v4
+echo       with:
+echo         dotnet-version: '8.0'
+echo     - name: Setup Node
+echo       uses: actions/setup-node@v4
+echo       with:
+echo         node-version: '18'
+echo     - name: Build API
+echo       run: dotnet build src/api/dev-api.csproj
+echo     - name: Build Web
+echo       run: ^|
+echo         cd src/web
+echo         npm install
+echo         npm run build
+) > .github\workflows\ci.yml
+
+echo ✅ Temel CI workflow olusturuldu
+
+:docker_setup
+
+:: ================================
 :: DOCKER SETUP TEST
 :: ================================
+:docker_setup
 echo.
 echo ================================
 echo DOCKER SETUP TEST
