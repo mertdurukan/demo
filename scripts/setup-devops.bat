@@ -192,6 +192,7 @@ if %errorlevel% equ 0 (
     echo ⚠️ Frontend install basarisiz
 )
 cd ..\..
+echo ✅ Dependencies setup tamamlandi
 
 :: ================================
 :: ENVIRONMENT SETUP
@@ -209,6 +210,7 @@ if not exist ".env" (
         echo ⚠️ env.example bulunamadi
     )
 )
+echo ✅ Environment setup tamamlandi
 
 :: ================================
 :: GITHUB ACTIONS SETUP
@@ -272,6 +274,7 @@ echo         npm run build
 ) > .github\workflows\ci.yml
 
 echo ✅ Temel CI workflow olusturuldu
+goto :docker_setup
 
 :docker_setup
 
