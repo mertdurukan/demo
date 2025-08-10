@@ -319,6 +319,7 @@ if %errorlevel% equ 0 (
 )
 
 echo ✅ Docker testleri tamamlandi (hatalar normal)
+goto :github_setup
 
 :: ================================
 :: GITHUB REPOSITORY CREATION
