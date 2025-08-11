@@ -35,7 +35,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Build application
-RUN npm run build
+RUN npm run build && ls -la .next/
 
 # ================================
 # STAGE 3: RUNTIME ENVIRONMENT
@@ -62,9 +62,10 @@ RUN adduser --system --uid 1001 nextjs
 # Public assets
 COPY --from=builder /app/public ./public
 
-# Next.js standalone output (optimized)
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Next.js build output
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
 # ================================
 # SECURITY & PERMISSIONS
@@ -81,4 +82,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # EXPOSE PORT & START
 # ================================
 EXPOSE 3000
-CMD ["node", "server.js"] 
+CMD ["npx", "next", "start"] 

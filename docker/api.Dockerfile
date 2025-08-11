@@ -32,10 +32,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 # ================================
+# INSTALL HEALTH CHECK DEPENDENCIES
+# ================================
+# curl gerekli health check için
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# ================================
 # SECURITY: NON-ROOT USER
 # ================================
 # Neden: Root olarak çalıştırmak güvenlik riski
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN addgroup --system appuser && adduser --system --ingroup appuser appuser
 
 # ================================
 # HEALTH CHECK ENDPOINT
