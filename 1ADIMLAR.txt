@@ -1,22 +1,5 @@
 scripts klasöründe
 
-.\scripts\setup-devops.bat mertdurukan
+scripts\simple-setup.bat mertdurukan "my-project"
 
 çalıştır
-
-sonra 
-
-1. 🔒 GitHub Secrets Setup (2 dakika)
-GitHub Repository → Settings → Secrets and variables → Actions
-Eklenecek secrets:
-- STAGING_DB_PASSWORD = YourStrong@Passw0rd123
-- PRODUCTION_DB_PASSWORD = YourVeryStrong@ProductionPassw0rd456
-
-2. 🚀 Pipeline Test (1 dakika)
-GitHub Repository → Actions tab
-İlk workflow'un çalıştığını kontrol edin
-
-3. 🐳 Local Test (1 dakika)
-docker-compose up -d
-# Test: http://localhost:5202 (Web)
-# Test: http://localhost:5102 (API)
