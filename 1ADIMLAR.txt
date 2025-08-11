@@ -1,5 +1,0 @@
-scripts klasöründe
-
-scripts\simple-setup.bat mertdurukan "my-project"
-
-çalıştır

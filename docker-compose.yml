@@ -1,200 +1,37 @@
-# ================================
-# DOCKER COMPOSE - PRODUCTION SETUP
-# ================================
-# Modern Docker Compose (version artık gerekli değil)
-
-# ================================
-# SERVICES DEFINITION
-# ================================
 services:
-  
-  # ================================
-  # DATABASE SERVICE
-  # ================================
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: devapp-database
-    
-    # Environment variables
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=${DB_PASSWORD:-YourStrong@Passw0rd123}
-      - MSSQL_PID=Express
-    
-    # Port mapping: Host:Container
+      - SA_PASSWORD=YourStrong@Passw0rd123
     ports:
       - "1433:1433"
-    
-    # Data persistence
     volumes:
       - sqlserver_data:/var/opt/mssql
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    
-    # Health check
-    healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DB_PASSWORD:-YourStrong@Passw0rd123} -Q "SELECT 1"
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    
-    # Network
-    networks:
-      - app-network
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 1G
 
-  # ================================
-  # API SERVICE
-  # ================================
   api:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-      # Build arguments
-      args:
-        - ASPNETCORE_ENVIRONMENT=Production
-    
-    container_name: devapp-api
-    
-    # Environment variables
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Server=database;Database=DevApiDb;User=sa;Password=${DB_PASSWORD:-YourStrong@Passw0rd123};TrustServerCertificate=true;MultipleActiveResultSets=true
-      - CORS__AllowedOrigins=http://web:3000,http://localhost:5202
-    
-    # Port mapping
     ports:
       - "5102:80"
-    
-    # Service dependencies
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=database;Database=DevApiDb;User=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
     depends_on:
-      database:
-        condition: service_healthy
-    
-    # Health check
-    healthcheck:
-      test: curl -f http://localhost:80/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    
-    # Network
-    networks:
-      - app-network
-    
-    # Restart policy
-    restart: unless-stopped
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+      - database
 
-  # ================================
-  # WEB SERVICE (Next.js)
-  # ================================
   web:
     build:
       context: .
       dockerfile: docker/web.Dockerfile
-    
-    container_name: devapp-web
-    
-    # Environment variables
-    environment:
-      - NODE_ENV=production
-      - API_URL=http://api:80
-      - PORT=3000
-      - NEXT_TELEMETRY_DISABLED=1
-    
-    # Port mapping
     ports:
       - "5202:3000"
-    
-    # Service dependencies
-    depends_on:
-      api:
-        condition: service_healthy
-    
-    # Health check
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    
-    # Network
-    networks:
-      - app-network
-    
-    # Restart policy
-    restart: unless-stopped
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
-
-  # ================================
-  # NGINX REVERSE PROXY (Optional)
-  # ================================
-  nginx:
-    image: nginx:alpine
-    container_name: devapp-nginx
-    
-    # Port mapping
-    ports:
-      - "80:80"
-      - "443:443"
-    
-    # Nginx configuration
-    volumes:
-      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./infrastructure/nginx/ssl:/etc/nginx/ssl
-    
-    # Service dependencies
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5102
     depends_on:
       - api
-      - web
-    
-    # Network
-    networks:
-      - app-network
-    
-    # Restart policy
-    restart: unless-stopped
 
-# ================================
-# VOLUMES DEFINITION
-# ================================
 volumes:
   sqlserver_data:
-    driver: local
-    name: devapp_sqlserver_data
-
-# ================================
-# NETWORKS DEFINITION
-# ================================
-networks:
-  app-network:
-    driver: bridge
-    name: devapp_network
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16 
